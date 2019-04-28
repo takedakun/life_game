@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <style>
+            .lifeGame {
+
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div>
+            <button onclick="start_life_game()">Start</button>
+            <button onclick="stop_life_game()">Stop</button>
+            <button onclick="clear_canvas()">Clear</button>
+        </div>
+
+        <div class="lifeGame">
+            <canvas id="life_game" width="800" height="600"></canvas>
+        </div>
+
+        <script>
+            const canvas = document.getElementById("life_game");
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+            const rect_size = 10;
+            let interval_timer;
+            let life_game_status = [];
+
+            initialize_canvas();
+            canvas.addEventListener("click", evt => fill_color(evt));
+
+            function initialize_canvas () {
+                life_game_status = []
+                for (let i=0; i < width; i+=rect_size) {
+                    life_game_status.push([]);
+                    for (let j=0; j<height; j+=rect_size) {
+                        ctx.fillStyle = "white";
+                        ctx.fillRect(i, j, rect_size, rect_size);
+                        ctx.strokeRect(i, j, rect_size ,rect_size);
+                        life_game_status[i/10].push(0);
+                    }
+                }
+            }
+
+            function fill_color(evt) {
+                let _x = Math.floor(evt.offsetX / rect_size);
+                let _y = Math.floor(evt.offsetY / rect_size);
+                let position_x = 10 * _x;
+                let position_y = 10 * _y;
+                let curr_status = life_game_status[_x][_y];
+                if (curr_status === 0) {
+                    life_game_status[_x][_y] = 1;
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(position_x, position_y, rect_size, rect_size);
+                } else {
+                    life_game_status[_x][_y] = 0;
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(position_x, position_y, rect_size, rect_size);
+                    ctx.strokeRect(position_x, position_y, rect_size, rect_size);
+                }
+            }
+
+            function start_life_game () {
+                interval_timer =setInterval(() => {
+                    update_state();
+                }, 600);
+            }
+
+            function update_state () {
+                let new_life_game_status = [];
+                for (let i=0; i < width/rect_size; i++) {
+                    new_life_game_status.push([]);
+                    for (let j=0; j < height/rect_size; j++) {
+                        let live_surr_cnt = check_surroundings(i, j);
+                        if (life_game_status[i][j] === 0) {
+                            if (live_surr_cnt === 3) {
+                                new_life_game_status[i].push(1);
+                                ctx.fillStyle = "black";
+                                ctx.fillRect(i * rect_size, j * rect_size, rect_size, rect_size);
+                            } else {
+                                new_life_game_status[i].push(0);
+                                ctx.fillStyle = "white";
+                                ctx.fillRect(i * rect_size, j * rect_size, rect_size, rect_size);
+                                ctx.strokeRect(i * rect_size, j * rect_size, rect_size ,rect_size);
+                            }
+                        } else {
+                            if (live_surr_cnt === 2 || live_surr_cnt === 3) {
+                                new_life_game_status[i].push(1);
+                                ctx.fillStyle = "black";
+                                ctx.fillRect(i * rect_size, j * rect_size, rect_size, rect_size);
+                            } else if (live_surr_cnt <= 1) {
+                                new_life_game_status[i].push(0);
+                                ctx.fillStyle = "white";
+                                ctx.fillRect(i * rect_size, j * rect_size, rect_size, rect_size);
+                                ctx.strokeRect(i * rect_size, j * rect_size, rect_size ,rect_size);
+                            } else {
+                                new_life_game_status[i].push(0);
+                                ctx.fillStyle = "white";
+                                ctx.fillRect(i * rect_size, j * rect_size, rect_size, rect_size);
+                                ctx.strokeRect(i * rect_size, j * rect_size, rect_size ,rect_size);
+                            }
+                        }
+                    }
+                }
+                life_game_status = new_life_game_status;
+            }
+
+            function check_surroundings (curr_x, curr_y) {
+                let live_surr_cnt = 0;
+                for (let i=-1; i<=1; i++) {
+                    for (let j=-1; j<=1; j++) {
+                        if (!(i===0 && j===0)) {
+                            if (curr_x + i < 0) continue;
+                            if (curr_x + i >= width/rect_size) continue;
+                            if (curr_y + i < 0) continue;
+                            if (curr_y + i >= height/rect_size) continue;
+                            live_surr_cnt += life_game_status[curr_x + i][curr_y + j];
+                        }
+                    }
+                }
+                return live_surr_cnt;
+            }
+
+            function stop_life_game () {
+                clearInterval(interval_timer);
+            }
+
+            function clear_canvas () {
+                initialize_canvas();
+            }
+
+        </script>
+    </body>
+</html>
